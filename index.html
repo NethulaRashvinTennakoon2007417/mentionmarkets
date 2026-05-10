@@ -1,41 +1,350 @@
-export const config = { runtime: 'edge' };
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mention Market Edge</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0a0a0b;--surface:#111114;--surface2:#18181d;--border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,0.14);--text:#e8e6e1;--muted:#6b6966;--muted2:#918f8a;--green:#22c55e;--green-dim:rgba(34,197,94,0.12);--red:#ef4444;--red-dim:rgba(239,68,68,0.12);--amber:#f59e0b;--amber-dim:rgba(245,158,11,0.12);--blue:#3b82f6;--accent:#a78bfa;--accent-dim:rgba(167,139,250,0.1);--mono:'DM Mono',monospace;--sans:'Syne',sans-serif}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
+  .header{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:100}
+  .logo{font-size:15px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+  .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .last-update{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .refresh-btn{background:var(--surface2);border:1px solid var(--border-bright);color:var(--text);font-family:var(--sans);font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer}
+  .refresh-btn:hover{background:var(--border)}
+  .container{max-width:1100px;margin:0 auto;padding:24px 28px}
+  .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+  .stat-value{font-size:26px;font-weight:700;font-family:var(--mono)}
+  .stat-value.green{color:var(--green)}.stat-value.amber{color:var(--amber)}.stat-value.blue{color:var(--blue)}
+  .controls{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .search-wrap{flex:1;min-width:200px;position:relative}
+  .search-input{width:100%;background:var(--surface);border:1px solid var(--border-bright);border-radius:8px;padding:9px 14px 9px 36px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none}
+  .search-input:focus{border-color:var(--accent)}
+  .search-input::placeholder{color:var(--muted)}
+  .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+  .filter-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted2);font-family:var(--sans);font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .filter-btn:hover{border-color:var(--border-bright);color:var(--text)}
+  .filter-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+  .sort-select{background:var(--surface);border:1px solid var(--border);color:var(--muted2);font-family:var(--sans);font-size:12px;padding:8px 12px;border-radius:8px;cursor:pointer;outline:none}
+  .event-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;margin-bottom:14px;overflow:hidden}
+  .event-header{padding:14px 18px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:12px}
+  .event-header:hover{background:var(--surface2)}
+  .event-title{font-size:14px;font-weight:600;color:var(--text);flex:1;line-height:1.4}
+  .event-meta{font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:3px}
+  .event-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+  .vol-badge{font-family:var(--mono);font-size:12px;color:var(--muted2)}
+  .trade-btn{background:var(--accent);color:#fff;border:none;font-family:var(--sans);font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer;text-decoration:none;white-space:nowrap}
+  .chevron{color:var(--muted);font-size:12px;transition:transform 0.2s}
+  .chevron.open{transform:rotate(180deg)}
+  .outcomes-list{border-top:1px solid var(--border)}
+  .outcome-row{display:grid;grid-template-columns:1fr 70px 80px 100px;align-items:center;padding:10px 18px;border-bottom:1px solid var(--border);gap:8px}
+  .outcome-row:last-child{border-bottom:none}
+  .outcome-row:hover{background:var(--surface2)}
+  .outcome-name{font-size:13px;color:var(--text)}
+  .outcome-price{font-family:var(--mono);font-size:14px;font-weight:600;text-align:right}
+  .p-green{color:var(--green)}.p-amber{color:var(--amber)}.p-red{color:var(--red)}
+  .edge-pill{display:inline-flex;align-items:center;font-family:var(--mono);font-size:11px;font-weight:500;padding:3px 8px;border-radius:5px;text-align:right;justify-content:flex-end}
+  .edge-strong{background:var(--green-dim);color:var(--green)}
+  .edge-medium{background:var(--amber-dim);color:var(--amber)}
+  .edge-weak{background:var(--surface2);color:var(--muted2)}
+  .edge-fade{background:var(--red-dim);color:var(--red)}
+  .outcome-action{text-align:right}
+  .mini-trade{font-size:11px;padding:3px 8px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent);border-radius:4px;text-decoration:none;white-space:nowrap}
+  .tag-pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;background:var(--accent-dim);color:var(--accent);font-family:var(--mono);margin-left:6px;vertical-align:middle}
+  .loading{text-align:center;padding:60px 20px;color:var(--muted);font-family:var(--mono);font-size:13px}
+  .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .empty-msg{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px;line-height:2}
+  .error-msg{text-align:center;padding:40px 20px;color:var(--red);font-size:13px;line-height:2}
+  .footer-note{margin-top:16px;font-size:11px;color:var(--muted);text-align:center;font-family:var(--mono)}
+  .outcomes-head{display:grid;grid-template-columns:1fr 70px 80px 100px;padding:7px 18px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);background:var(--bg)}
+  .th-r{text-align:right}
+  @media(max-width:700px){
+    .stat-bar{grid-template-columns:repeat(2,1fr)}
+    .outcome-row{grid-template-columns:1fr 60px 70px}
+    .col-action{display:none}
+    .container{padding:14px}
+  }
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="logo"><div class="logo-dot"></div>Mention Market Edge</div>
+  <div class="header-right">
+    <span class="last-update" id="ts">—</span>
+    <button class="refresh-btn" onclick="boot()">↻ Refresh</button>
+  </div>
+</header>
 
-export default async function handler(req) {
-  const { searchParams } = new URL(req.url);
-  const path = searchParams.get('path') || '/events?active=true&closed=false&limit=50&order=volume&ascending=false&tag_slug=mentions';
+<div class="container">
+  <div class="stat-bar">
+    <div class="stat"><div class="stat-label">Active events</div><div class="stat-value blue" id="s-total">—</div></div>
+    <div class="stat"><div class="stat-label">Total outcomes</div><div class="stat-value green" id="s-outcomes">—</div></div>
+    <div class="stat"><div class="stat-label">Strong edge picks</div><div class="stat-value amber" id="s-strong">—</div></div>
+    <div class="stat"><div class="stat-label">Total volume</div><div class="stat-value" id="s-vol">—</div></div>
+  </div>
 
-  const url = 'https://gamma-api.polymarket.com' + path;
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input class="search-input" type="text" id="search" placeholder="Search speaker or term…" oninput="render()">
+    </div>
+    <button class="filter-btn active" id="f-all"       onclick="setF('all')">All</button>
+    <button class="filter-btn"        id="f-political" onclick="setF('political')">Political</button>
+    <button class="filter-btn"        id="f-sports"    onclick="setF('sports')">Sports/Gaming</button>
+    <button class="filter-btn"        id="f-other"     onclick="setF('other')">Other</button>
+    <select class="sort-select" id="sort" onchange="render()">
+      <option value="volume">Sort: Volume</option>
+      <option value="newest">Newest</option>
+      <option value="ending">Ending soon</option>
+    </select>
+  </div>
 
-  try {
-    const res = await fetch(url, {
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Origin': 'https://polymarket.com',
-        'Referer': 'https://polymarket.com/mentions',
+  <div id="list"><div class="loading"><div class="spinner"></div>Loading mention markets…</div></div>
+  <p class="footer-note">Data: Polymarket · Not financial advice · Edge signals are algorithmic estimates only</p>
+</div>
+
+<script>
+// Real mention market event slugs from polymarket.com/mentions
+// Used as fallback if tag API doesn't work
+const KNOWN_SLUGS = [
+  'what-will-trump-say-this-week-may-3',
+  'what-will-trump-say-this-week-may-10',
+  'what-will-bernie-sanders-say-in-detroit',
+  'what-will-trump-say-during-bilateral-events-with-xi-jinping',
+  'what-will-be-said-during-the-valorant-masters-santiago-2026-grand-finals',
+  'what-will-jensen-huang-say-during-the-nvidia-gtc-keynote',
+  'what-will-keir-starmer-say-at-the-next-prime-ministers-questions-event-763',
+  'what-will-powell-say-during-march-press-conference',
+  'what-will-trump-say-this-week-march-22',
+  'what-animals-will-trump-say-in-may',
+  'what-will-trump-post-this-week',
+];
+
+function getCategory(s){
+  const t=(s||'').toLowerCase();
+  if(/trump|biden|powell|harris|sanders|starmer|pelosi|schumer|congress|senate|president|fed |fomc|white house|xi jinping|zelensky|scholz|macron/.test(t))return'political';
+  if(/valorant|nfl|nba|nhl|mlb|super bowl|game|esport|gaming|fifa|league of legends|dota/.test(t))return'sports';
+  return'other';
+}
+
+function calcEdge(p){
+  // p is 0-1 probability
+  if(p>=0.72&&p<=0.91)return{score:'strong',label:'Strong edge'};
+  if(p>=0.55&&p<0.72)return{score:'medium',label:'Mild edge'};
+  if(p>0.91)return{score:'weak',label:'Near resolved'};
+  if(p<=0.15)return{score:'fade',label:'Fade it'};
+  if(p>0.15&&p<0.30)return{score:'medium',label:'Lean NO'};
+  return{score:'weak',label:'No clear edge'};
+}
+
+function fv(v){if(!v)return'$0';v=parseFloat(v);if(v>=1e6)return'$'+(v/1e6).toFixed(1)+'M';if(v>=1e3)return'$'+(v/1e3).toFixed(0)+'k';return'$'+Math.round(v)}
+function fd(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch(_){return'—'}}
+function eh(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
+async function polyFetch(path){
+  const res=await fetch('/api/polymarket?path='+encodeURIComponent(path));
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  return res.json();
+}
+
+let events=[],filt='all';
+
+async function boot(){
+  document.getElementById('list').innerHTML='<div class="loading"><div class="spinner"></div>Loading mention markets…</div>';
+
+  try{
+    // Try multiple API strategies in parallel
+    const fetches = await Promise.allSettled([
+      // Strategy 1: tag_slug=mentions (primary)
+      polyFetch('/events?active=true&closed=false&limit=100&order=volume&ascending=false&tag_slug=mentions'),
+      // Strategy 2: broader tag fetch
+      polyFetch('/events?active=true&closed=false&limit=100&order=volume&ascending=false&tag_slug=pop-culture&category=mentions'),
+      // Strategy 3: fetch known slugs directly
+      ...KNOWN_SLUGS.map(slug => polyFetch('/events?slug='+slug)),
+    ]);
+
+    const seen=new Set(), raw=[];
+
+    for(const r of fetches){
+      if(r.status!=='fulfilled') continue;
+      const val = r.value;
+      // Response can be array of events or single event or object with events key
+      const arr = Array.isArray(val) ? val : val.events ? val.events : val.data ? val.data : [val];
+
+      for(const evt of arr){
+        if(!evt||!evt.id) continue;
+        if(seen.has(evt.id)) continue;
+        seen.add(evt.id);
+
+        const title = evt.title || evt.question || '';
+        if(!title) continue;
+
+        // Parse markets/outcomes from this event
+        const markets = Array.isArray(evt.markets) ? evt.markets : [];
+        const vol = parseFloat(evt.volumeNum||evt.volume||0);
+
+        // Build outcomes list — each market in a mention event = one word/phrase outcome
+        const outcomes = [];
+        for(const m of markets){
+          const mTitle = m.question||m.title||'';
+          // Parse prices
+          let price = null;
+          try{
+            const outs = typeof m.outcomes==='string'?JSON.parse(m.outcomes):(m.outcomes||[]);
+            const prcs = typeof m.outcomePrices==='string'?JSON.parse(m.outcomePrices):(m.outcomePrices||[]);
+            const yi = outs.findIndex(o=>/^yes$/i.test((o||'').trim()));
+            if(yi>=0&&prcs[yi]!=null) price=parseFloat(prcs[yi]);
+            else if(prcs[0]!=null) price=parseFloat(prcs[0]);
+          }catch(_){}
+          if(price===null&&m.lastTradePrice) price=parseFloat(m.lastTradePrice);
+          if(price===null) continue;
+
+          outcomes.push({
+            id: m.id,
+            name: mTitle,
+            price,
+            vol: parseFloat(m.volumeNum||m.volume||0),
+            edge: calcEdge(price),
+            url: m.slug?`https://polymarket.com/market/${m.slug}`:`https://polymarket.com/event/${evt.slug||evt.id}`,
+          });
+        }
+
+        // Sort outcomes by price desc
+        outcomes.sort((a,b)=>b.price-a.price);
+
+        raw.push({
+          id: evt.id,
+          title,
+          slug: evt.slug||'',
+          cat: getCategory(title),
+          vol,
+          end: evt.endDate||evt.endDateIso||null,
+          outcomes,
+          url: `https://polymarket.com/event/${evt.slug||evt.id}`,
+        });
       }
-    });
-
-    if (!res.ok) {
-      return new Response(JSON.stringify({ error: 'Upstream HTTP ' + res.status }), {
-        status: res.status,
-        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-      });
     }
 
-    const data = await res.text();
-    return new Response(data, {
-      status: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*',
-        'Cache-Control': 's-maxage=30, stale-while-revalidate=60',
-      }
-    });
-  } catch(e) {
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-    });
+    raw.sort((a,b)=>b.vol-a.vol);
+    events = raw;
+    updateStats();
+    render();
+    document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+    if(!raw.length){
+      document.getElementById('list').innerHTML=`<div class="empty-msg">
+        No mention markets found.<br>
+        <small style="color:var(--muted)">
+          The Polymarket API may have changed its tag structure.<br>
+          <a href="https://polymarket.com/mentions" target="_blank" style="color:var(--accent)">View markets directly on Polymarket →</a>
+        </small>
+      </div>`;
+    }
+  }catch(e){
+    console.error(e);
+    document.getElementById('list').innerHTML=`<div class="error-msg">
+      Error: ${e.message}<br>
+      <a href="https://polymarket.com/mentions" target="_blank" style="color:var(--accent)">View on Polymarket directly →</a>
+    </div>`;
   }
 }
+
+function updateStats(){
+  const n=events.length;
+  const totalOutcomes=events.reduce((s,e)=>s+e.outcomes.length,0);
+  const strongPicks=events.reduce((s,e)=>s+e.outcomes.filter(o=>o.edge.score==='strong').length,0);
+  const totalVol=events.reduce((s,e)=>s+e.vol,0);
+  document.getElementById('s-total').textContent=n;
+  document.getElementById('s-outcomes').textContent=totalOutcomes;
+  document.getElementById('s-strong').textContent=strongPicks;
+  document.getElementById('s-vol').textContent=fv(totalVol);
+}
+
+function setF(f){
+  filt=f;
+  ['all','political','sports','other'].forEach(id=>document.getElementById('f-'+id)?.classList.toggle('active',id===f));
+  render();
+}
+
+function render(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  const s=document.getElementById('sort').value;
+  let evts=events.filter(e=>{
+    if(filt!=='all'&&e.cat!==filt) return false;
+    if(q&&!e.title.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  if(s==='newest') evts=[...evts].sort((a,b)=>new Date(b.end||0)-new Date(a.end||0));
+  else if(s==='ending') evts=[...evts].sort((a,b)=>new Date(a.end||9e15)-new Date(b.end||9e15));
+  else evts=[...evts].sort((a,b)=>b.vol-a.vol);
+
+  if(!evts.length){
+    document.getElementById('list').innerHTML='<div class="empty-msg">No markets matched. Try "All".</div>';
+    return;
+  }
+  document.getElementById('list').innerHTML=evts.map(buildCard).join('');
+}
+
+function buildCard(e){
+  const ct=e.cat!=='other'?`<span class="tag-pill">${e.cat}</span>`:'';
+  const hasOutcomes=e.outcomes.length>0;
+
+  const outcomesHtml = hasOutcomes ? `
+    <div class="outcomes-list" id="ol-${e.id}" style="display:none">
+      <div class="outcomes-head">
+        <div>Word / Phrase</div>
+        <div class="th-r">Price</div>
+        <div class="th-r">Edge signal</div>
+        <div class="th-r col-action">Trade</div>
+      </div>
+      ${e.outcomes.map(o=>{
+        const pct=Math.round(o.price*100);
+        const pc=pct>55?'p-green':pct<25?'p-red':'p-amber';
+        const ec={strong:'edge-strong',medium:'edge-medium',weak:'edge-weak',fade:'edge-fade'}[o.edge.score]||'edge-weak';
+        return`<div class="outcome-row">
+          <div class="outcome-name">${eh(o.name)}</div>
+          <div class="outcome-price ${pc}">${pct}¢</div>
+          <div style="text-align:right"><span class="edge-pill ${ec}">${o.edge.label}</span></div>
+          <div class="outcome-action col-action"><a class="mini-trade" href="${o.url}" target="_blank">Trade ↗</a></div>
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
+  return`<div class="event-card">
+    <div class="event-header" onclick="toggleOutcomes('${e.id}')">
+      <div>
+        <div class="event-title">${eh(e.title)}${ct}</div>
+        <div class="event-meta">expires ${fd(e.end)} · ${e.outcomes.length} outcomes</div>
+      </div>
+      <div class="event-right">
+        <span class="vol-badge">${fv(e.vol)}</span>
+        <a class="trade-btn" href="${e.url}" target="_blank" onclick="event.stopPropagation()">Trade ↗</a>
+        <span class="chevron" id="chev-${e.id}">▼</span>
+      </div>
+    </div>
+    ${outcomesHtml}
+  </div>`;
+}
+
+function toggleOutcomes(id){
+  const ol=document.getElementById('ol-'+id);
+  const ch=document.getElementById('chev-'+id);
+  if(!ol) return;
+  const open=ol.style.display!=='none';
+  ol.style.display=open?'none':'block';
+  if(ch) ch.className='chevron'+(open?'':' open');
+}
+
+boot();
+setInterval(boot,3*60*1000);
+</script>
+</body>
+</html>
