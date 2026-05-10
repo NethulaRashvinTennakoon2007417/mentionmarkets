@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mention Market Edge</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0a0b;--surface:#111114;--surface2:#18181d;
+    --border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,0.14);
+    --text:#e8e6e1;--muted:#6b6966;--muted2:#918f8a;
+    --green:#22c55e;--green-dim:rgba(34,197,94,0.12);
+    --red:#ef4444;--red-dim:rgba(239,68,68,0.12);
+    --amber:#f59e0b;--amber-dim:rgba(245,158,11,0.12);
+    --blue:#3b82f6;--accent:#a78bfa;--accent-dim:rgba(167,139,250,0.1);
+    --mono:'DM Mono',monospace;--sans:'Syne',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6;min-height:100vh}
+  .header{padding:18px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg);z-index:100}
+  .logo{font-size:15px;font-weight:700;letter-spacing:-.02em;display:flex;align-items:center;gap:10px}
+  .logo-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s ease-in-out infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+  .header-right{display:flex;align-items:center;gap:12px}
+  .last-update{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .refresh-btn{background:var(--surface2);border:1px solid var(--border-bright);color:var(--text);font-family:var(--sans);font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer}
+  .refresh-btn:hover{background:var(--border)}
+  .container{max-width:1100px;margin:0 auto;padding:24px 28px}
+  .stat-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+  .stat{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+  .stat-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+  .stat-value{font-size:26px;font-weight:700;font-family:var(--mono)}
+  .stat-value.green{color:var(--green)}.stat-value.amber{color:var(--amber)}.stat-value.blue{color:var(--blue)}
+  .controls{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .search-wrap{flex:1;min-width:200px;position:relative}
+  .search-input{width:100%;background:var(--surface);border:1px solid var(--border-bright);border-radius:8px;padding:9px 14px 9px 36px;color:var(--text);font-family:var(--sans);font-size:13px;outline:none}
+  .search-input:focus{border-color:var(--accent)}
+  .search-input::placeholder{color:var(--muted)}
+  .search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:14px;pointer-events:none}
+  .filter-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted2);font-family:var(--sans);font-size:12px;padding:8px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+  .filter-btn:hover{border-color:var(--border-bright);color:var(--text)}
+  .filter-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent)}
+  .sort-select{background:var(--surface);border:1px solid var(--border);color:var(--muted2);font-family:var(--sans);font-size:12px;padding:8px 12px;border-radius:8px;cursor:pointer;outline:none}
+  .table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  .table-head{display:grid;grid-template-columns:2fr 80px 80px 110px 120px 90px;padding:10px 18px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+  .th-right{text-align:right}
+  .market-row{display:grid;grid-template-columns:2fr 80px 80px 110px 120px 90px;padding:14px 18px;border-bottom:1px solid var(--border);align-items:center;cursor:pointer}
+  .market-row:last-child{border-bottom:none}
+  .market-row:hover{background:var(--surface2)}
+  .market-title{font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px;line-height:1.4}
+  .market-meta{font-size:11px;color:var(--muted);font-family:var(--mono)}
+  .cell-right{text-align:right;font-family:var(--mono);font-size:13px}
+  .price-yes{color:var(--green);font-weight:500}.price-no{color:var(--red)}
+  .edge-badge{display:inline-flex;align-items:center;font-family:var(--mono);font-size:11px;font-weight:500;padding:3px 8px;border-radius:5px;float:right}
+  .edge-strong{background:var(--green-dim);color:var(--green)}
+  .edge-medium{background:var(--amber-dim);color:var(--amber)}
+  .edge-weak{background:var(--surface2);color:var(--muted2)}
+  .edge-fade{background:var(--red-dim);color:var(--red)}
+  .vol-wrap{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+  .vol-bar-bg{width:36px;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+  .vol-bar-fill{height:100%;border-radius:2px;background:var(--blue)}
+  .vol-text{font-family:var(--mono);font-size:12px;color:var(--muted2);min-width:42px;text-align:right}
+  .detail-panel{display:none;background:var(--surface2);border-bottom:1px solid var(--border);padding:16px 18px}
+  .detail-panel.open{display:block}
+  .detail-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:12px}
+  .detail-block-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:8px}
+  .edge-bar-row{display:flex;align-items:center;gap:8px;font-size:12px;margin-bottom:6px}
+  .edge-bar-name{width:100px;color:var(--muted2);flex-shrink:0}
+  .edge-bar-track{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden}
+  .edge-bar-val{font-family:var(--mono);font-size:11px;color:var(--muted2);width:30px;text-align:right}
+  .det-btn{font-family:var(--sans);font-size:12px;padding:6px 14px;border-radius:6px;cursor:pointer;text-decoration:none;display:inline-block;margin-right:6px}
+  .det-btn-primary{background:var(--accent);color:#fff;border:none}
+  .det-btn-secondary{background:none;border:1px solid var(--border-bright);color:var(--muted2)}
+  .resolution-note{font-size:12px;color:var(--muted2);background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:8px 12px;margin-top:10px;font-family:var(--mono);line-height:1.5}
+  .loading{text-align:center;padding:60px 20px;color:var(--muted);font-family:var(--mono);font-size:13px}
+  .spinner{width:24px;height:24px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .error-msg{text-align:center;padding:40px 20px;font-size:13px;line-height:2}
+  .empty-msg{text-align:center;padding:40px 20px;color:var(--muted);font-size:13px}
+  .tag-pill{display:inline-block;font-size:10px;padding:2px 7px;border-radius:4px;background:var(--accent-dim);color:var(--accent);font-family:var(--mono);margin-left:6px;vertical-align:middle}
+  .multi-row{background:var(--surface2);border-bottom:1px solid var(--border);padding:0 18px}
+  .multi-outcome{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px}
+  .multi-outcome:last-child{border-bottom:none}
+  .outcome-name{color:var(--text);flex:1}
+  .outcome-price{font-family:var(--mono);font-weight:500}
+  .outcome-edge{font-family:var(--mono);font-size:11px;padding:2px 6px;border-radius:4px;margin-left:8px}
+  .footer-note{margin-top:16px;font-size:11px;color:var(--muted);text-align:center;font-family:var(--mono)}
+  @media(max-width:700px){
+    .stat-bar{grid-template-columns:repeat(2,1fr)}
+    .table-head,.market-row{grid-template-columns:1fr 70px 70px}
+    .col-vol,.col-edge,.col-no{display:none}
+    .detail-grid{grid-template-columns:1fr}
+    .container{padding:14px}
+  }
+</style>
+</head>
+<body>
+<header class="header">
+  <div class="logo"><div class="logo-dot"></div>Mention Market Edge</div>
+  <div class="header-right">
+    <span class="last-update" id="ts">—</span>
+    <button class="refresh-btn" onclick="boot()">↻ Refresh</button>
+  </div>
+</header>
+
+<div class="container">
+  <div class="stat-bar">
+    <div class="stat"><div class="stat-label">Active markets</div><div class="stat-value blue" id="s-total">—</div></div>
+    <div class="stat"><div class="stat-label">Strong YES edge</div><div class="stat-value green" id="s-strong">—</div></div>
+    <div class="stat"><div class="stat-label">Fade signals</div><div class="stat-value amber" id="s-fade">—</div></div>
+    <div class="stat"><div class="stat-label">Avg YES price</div><div class="stat-value" id="s-avg">—</div></div>
+  </div>
+  <div class="controls">
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input class="search-input" type="text" id="search" placeholder="Search term or speaker…" oninput="render()">
+    </div>
+    <button class="filter-btn active" id="f-all"       onclick="setF('all')">All</button>
+    <button class="filter-btn"        id="f-political" onclick="setF('political')">Political</button>
+    <button class="filter-btn"        id="f-earnings"  onclick="setF('earnings')">Earnings</button>
+    <button class="filter-btn"        id="f-sports"    onclick="setF('sports')">Sports/TV</button>
+    <select class="sort-select" id="sort" onchange="render()">
+      <option value="volume">Sort: Volume</option>
+      <option value="yes_d">YES high→low</option>
+      <option value="yes_a">YES low→high</option>
+      <option value="edge">Edge score</option>
+    </select>
+  </div>
+  <div class="table-wrap">
+    <div class="table-head">
+      <div>Market</div>
+      <div class="th-right">YES</div>
+      <div class="th-right col-no">NO</div>
+      <div class="th-right col-vol">Volume</div>
+      <div class="th-right col-edge">Edge signal</div>
+      <div class="th-right">Action</div>
+    </div>
+    <div id="list"><div class="loading"><div class="spinner"></div>Loading mention markets…</div></div>
+  </div>
+  <p class="footer-note">Data: Polymarket Gamma API · Not financial advice · Edge signals are estimates only</p>
+</div>
+
+<script>
+// ── Key insight from search results:
+// Polymarket mention markets are tagged under the "mentions" tag/slug.
+// The Gamma API supports tag_slug filtering.
+// Market titles follow: "What will X say this week?" or "What animals will Trump say in May?"
+// These are MULTI-OUTCOME markets — not simple yes/no.
+// Each event has multiple markets (one per word/phrase).
+
+function getCategory(s){
+  const t=(s||'').toLowerCase();
+  if(/earnings|ceo|cfo|quarter|revenue|analyst|conference call/.test(t))return'earnings';
+  if(/trump|biden|powell|harris|sanders|pelosi|schumer|congress|senate|president|fed |fomc|white house|rally|speech|briefing|zelensky|musk|elon/.test(t))return'political';
+  if(/nfl|nba|nhl|mlb|super bowl|game |broadcast|announcer|commentator|espn/.test(t))return'sports';
+  return'other';
+}
+
+function calcEdge(y,vol){
+  let score,label,pct;
+  if(y>=0.72&&y<=0.91){score='strong';label='Lean YES';pct=Math.round((y-.5)*90)}
+  else if(y>=0.55&&y<0.72){score='medium';label='Mild YES';pct=Math.round((y-.5)*65)}
+  else if(y>0.91){score='weak';label='Near resolved';pct=8}
+  else if(y<=0.18){score='fade';label='Fade YES';pct=Math.round((.5-y)*65)}
+  else if(y>0.18&&y<0.35){score='medium';label='Lean NO';pct=Math.round((.5-y)*50)}
+  else{score='weak';label='No clear edge';pct=Math.round(Math.abs(y-.5)*30)}
+  if(vol>10000)pct=Math.min(pct+10,99);
+  return{score,label,pct};
+}
+
+function parseYes(m){
+  try{
+    const outs=typeof m.outcomes==='string'?JSON.parse(m.outcomes):(m.outcomes||[]);
+    const prcs=typeof m.outcomePrices==='string'?JSON.parse(m.outcomePrices):(m.outcomePrices||[]);
+    const yi=outs.findIndex(o=>/^yes$/i.test((o||'').trim()));
+    if(yi>=0&&prcs[yi]!=null)return{yes:parseFloat(prcs[yi]),no:parseFloat(prcs[1-yi]||1-prcs[yi]),outcomes:null};
+    // Multi-outcome market — return all outcomes with prices
+    if(outs.length>2){
+      return{yes:null,no:null,outcomes:outs.map((o,i)=>({name:o,price:parseFloat(prcs[i]||0)})).sort((a,b)=>b.price-a.price)};
+    }
+    if(prcs.length)return{yes:parseFloat(prcs[0]),no:parseFloat(prcs[1]||1-prcs[0]),outcomes:null};
+  }catch(_){}
+  if(m.lastTradePrice)return{yes:parseFloat(m.lastTradePrice),no:1-parseFloat(m.lastTradePrice),outcomes:null};
+  return null;
+}
+
+function fv(v){if(v>=1e6)return'$'+(v/1e6).toFixed(1)+'M';if(v>=1e3)return'$'+(v/1e3).toFixed(0)+'k';return'$'+Math.round(v)}
+function fd(d){if(!d)return'—';try{return new Date(d).toLocaleDateString('en-US',{month:'short',day:'numeric'})}catch(_){return'—'}}
+function eh(s){return(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function ej(s){return(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'")}
+
+async function polyFetch(path){
+  const res=await fetch('/api/polymarket?path='+encodeURIComponent(path));
+  if(!res.ok)throw new Error('HTTP '+res.status);
+  return res.json();
+}
+
+let markets=[],filt='all';
+
+async function boot(){
+  document.getElementById('list').innerHTML='<div class="loading"><div class="spinner"></div>Loading mention markets…</div>';
+  const seen=new Set(),raw=[];
+
+  try{
+    // PRIMARY: fetch events tagged "mentions" directly — this is the exact
+    // tag Polymarket uses for all mention/word markets
+    const tagFetches=[
+      polyFetch('/events?active=true&closed=false&limit=100&order=volume&ascending=false&tag_slug=mentions'),
+      polyFetch('/events?active=true&closed=false&limit=100&order=volume&ascending=false&tag_slug=pop-culture'),
+      // Also fetch by searching title keywords as backup
+      polyFetch('/events?active=true&closed=false&limit=50&order=volume&ascending=false&_q=what+will+trump+say'),
+      polyFetch('/events?active=true&closed=false&limit=50&order=volume&ascending=false&_q=what+will+say'),
+      polyFetch('/events?active=true&closed=false&limit=50&order=volume&ascending=false&_q=animals+trump'),
+      polyFetch('/events?active=true&closed=false&limit=50&order=volume&ascending=false&_q=sanders+say'),
+    ];
+
+    const results=await Promise.allSettled(tagFetches);
+
+    for(const r of results){
+      if(r.status!=='fulfilled')continue;
+      const batch=r.value;
+      const evts=Array.isArray(batch)?batch:(batch.events||batch.data||[]);
+
+      for(const evt of evts){
+        const evtTitle=evt.title||evt.question||'';
+        const evtSlug=evt.slug||'';
+        const evtVol=parseFloat(evt.volume||evt.volumeNum||0);
+
+        // Accept event if title looks like a mention market OR has mentions tag
+        const tags=(evt.tags||[]).map(t=>(t.slug||t.label||t.name||'').toLowerCase());
+        const isMentionTag=tags.includes('mentions')||tags.includes('pop-culture')||tags.includes('words');
+        const isMentionTitle=/what will .+ say|will .+ say|animals .+ say|words .+ say|what .+ say this/i.test(evtTitle);
+
+        if(!isMentionTag&&!isMentionTitle)continue;
+
+        // Each event may have multiple markets (one per word/outcome)
+        // For mention markets, often the EVENT itself is the market
+        const mktArr=Array.isArray(evt.markets)&&evt.markets.length>0?evt.markets:[evt];
+
+        for(const m of mktArr){
+          const mid=m.id||evt.id;
+          if(seen.has(mid))continue;
+          seen.add(mid);
+
+          const title=m.question||m.title||evtTitle;
+          const parsed=parseYes(m);
+          if(!parsed)continue;
+
+          const vol=parseFloat(m.volumeNum||m.volume||evtVol||0);
+          const liq=parseFloat(m.liquidityNum||m.liquidity||0);
+          const cat=getCategory(title+' '+evtTitle);
+
+          // For binary YES/NO markets
+          if(parsed.yes!==null){
+            raw.push({
+              id:mid,title,evtTitle,isMulti:false,
+              yp:parsed.yes,np:parsed.no,outcomes:null,
+              vol,liq,end:m.endDate||m.endDateIso||evt.endDate||null,
+              cat,edge:calcEdge(parsed.yes,vol),
+              url:m.slug?`https://polymarket.com/market/${m.slug}`:`https://polymarket.com/event/${evtSlug||mid}`
+            });
+          } else if(parsed.outcomes){
+            // Multi-outcome: use top outcome price as the YES proxy
+            const top=parsed.outcomes[0];
+            raw.push({
+              id:mid,title,evtTitle,isMulti:true,
+              yp:top.price,np:1-top.price,outcomes:parsed.outcomes,
+              vol,liq,end:m.endDate||m.endDateIso||evt.endDate||null,
+              cat,edge:calcEdge(top.price,vol),
+              url:m.slug?`https://polymarket.com/market/${m.slug}`:`https://polymarket.com/event/${evtSlug||mid}`
+            });
+          }
+        }
+      }
+    }
+
+    raw.sort((a,b)=>b.vol-a.vol);
+    markets=raw;
+    updateStats();render();
+    document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'});
+
+    if(!raw.length){
+      document.getElementById('list').innerHTML=`<div class="empty-msg">
+        No mention markets found right now.<br>
+        <small style="color:var(--muted)">
+          Polymarket currently has ~11 active mention markets.<br>
+          They may all be resolved or the API tag has changed.<br>
+          Try refreshing — markets reset weekly (usually Monday).
+        </small>
+      </div>`;
+    }
+  }catch(e){
+    console.error(e);
+    document.getElementById('list').innerHTML=`<div class="error-msg" style="color:var(--red)">
+      Error: ${e.message}<br><small style="color:var(--muted)">Open F12 → Console for details.</small>
+    </div>`;
+  }
+}
+
+function updateStats(){
+  const n=markets.length;
+  document.getElementById('s-total').textContent=n;
+  document.getElementById('s-strong').textContent=markets.filter(m=>m.edge.score==='strong').length;
+  document.getElementById('s-fade').textContent=markets.filter(m=>m.edge.score==='fade').length;
+  const avg=n?markets.reduce((s,m)=>s+m.yp,0)/n:0;
+  document.getElementById('s-avg').textContent=Math.round(avg*100)+'¢';
+}
+
+function setF(f){
+  filt=f;
+  ['all','political','earnings','sports'].forEach(id=>document.getElementById('f-'+id)?.classList.toggle('active',id===f));
+  render();
+}
+
+function render(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  const s=document.getElementById('sort').value;
+  let ms=markets.filter(m=>{
+    if(filt!=='all'&&m.cat!==filt)return false;
+    if(q&&!m.title.toLowerCase().includes(q)&&!m.evtTitle.toLowerCase().includes(q))return false;
+    return true;
+  });
+  if(s==='yes_d')ms.sort((a,b)=>b.yp-a.yp);
+  else if(s==='yes_a')ms.sort((a,b)=>a.yp-b.yp);
+  else if(s==='edge')ms.sort((a,b)=>b.edge.pct-a.edge.pct);
+  else ms.sort((a,b)=>b.vol-a.vol);
+  if(!ms.length){document.getElementById('list').innerHTML='<div class="empty-msg">No markets matched. Try "All".</div>';return}
+  const mx=Math.max(...ms.map(m=>m.vol),1);
+  document.getElementById('list').innerHTML=ms.map(m=>buildRow(m,mx)).join('');
+}
+
+function buildRow(m,mx){
+  const yp=Math.round(m.yp*100),np=Math.round(m.np*100),vf=Math.round((m.vol/mx)*100);
+  const ct=m.cat!=='other'?`<span class="tag-pill">${m.cat}</span>`:'';
+  const multiTag=m.isMulti?`<span class="tag-pill" style="background:rgba(59,130,246,0.1);color:var(--blue)">multi</span>`:'';
+  const bc={strong:'edge-strong',medium:'edge-medium',weak:'edge-weak',fade:'edge-fade'}[m.edge.score]||'edge-weak';
+
+  // For multi-outcome markets show top outcome name instead of YES price
+  const yesDisplay=m.isMulti&&m.outcomes
+    ?`<span style="font-size:11px;color:var(--muted2)">${eh(m.outcomes[0].name)}: ${yp}¢</span>`
+    :`${yp}¢`;
+
+  const bars=[
+    {n:'Top price',v:yp,c:yp>55?'var(--green)':yp<30?'var(--red)':'var(--amber)'},
+    {n:'Liquidity',v:Math.min(Math.round((m.liq/10000)*100),100),c:'var(--blue)'},
+    {n:'Volume',v:vf,c:'var(--accent)'}
+  ].map(b=>`<div class="edge-bar-row"><div class="edge-bar-name">${b.n}</div><div class="edge-bar-track"><div style="height:100%;background:${b.c};width:${b.v}%;border-radius:2px"></div></div><div class="edge-bar-val">${b.v}</div></div>`).join('');
+
+  // Multi-outcome rows
+  const multiRows=m.isMulti&&m.outcomes?`
+  <div class="multi-row">
+    ${m.outcomes.slice(0,8).map(o=>{
+      const op=Math.round(o.price*100);
+      const e=calcEdge(o.price,m.vol);
+      const ebc={strong:'edge-strong',medium:'edge-medium',weak:'edge-weak',fade:'edge-fade'}[e.score]||'edge-weak';
+      return`<div class="multi-outcome">
+        <span class="outcome-name">${eh(o.name)}</span>
+        <span class="outcome-price" style="color:${op>50?'var(--green)':op<20?'var(--red)':'var(--amber)'}">${op}¢</span>
+        <span class="outcome-edge ${ebc}">${e.label}</span>
+      </div>`;
+    }).join('')}
+  </div>`:'';
+
+  const rn=m.cat==='earnings'?'⚠ Earnings: resolution usually limited to named speaker only. Confirm before trading.'
+    :m.cat==='political'?'📋 Political: resolves YES if the word/phrase appears in the specified event.'
+    :'📋 Multi-outcome: each word/phrase is a separate outcome. Highest price = crowd favourite.';
+
+  return`<div class="market-row" onclick="toggle('${m.id}')">
+    <div><div class="market-title">${eh(m.title)}${ct}${multiTag}</div><div class="market-meta">expires ${fd(m.end)} · ${fv(m.vol)}</div></div>
+    <div class="cell-right price-yes" style="font-size:${m.isMulti?'11px':'13px'}">${yesDisplay}</div>
+    <div class="cell-right price-no col-no">${m.isMulti?'—':np+'¢'}</div>
+    <div class="col-vol"><div class="vol-wrap"><div class="vol-bar-bg"><div class="vol-bar-fill" style="width:${vf}%"></div></div><span class="vol-text">${fv(m.vol)}</span></div></div>
+    <div class="col-edge" style="text-align:right"><span class="edge-badge ${bc}">${m.edge.label}</span></div>
+    <div style="text-align:right"><a class="det-btn det-btn-primary" href="${m.url}" target="_blank" onclick="event.stopPropagation()">Trade ↗</a></div>
+  </div>
+  ${multiRows}
+  <div class="detail-panel" id="d-${m.id}">
+    <div class="detail-grid">
+      <div><div class="detail-block-label">Edge components</div>${bars}</div>
+      <div><div class="detail-block-label">Signal</div>
+        <div style="font-size:13px;color:var(--muted2);line-height:1.7">
+          <strong style="color:var(--text)">${m.edge.label}</strong><br>
+          Edge score: <span style="font-family:var(--mono);color:var(--accent)">${m.edge.pct}</span><br>
+          Top price: <span style="font-family:var(--mono);color:var(--green)">${yp}¢</span><br>
+          Category: <span style="font-family:var(--mono)">${m.cat}</span>
+        </div>
+      </div>
+      <div><div class="detail-block-label">Actions</div>
+        <a class="det-btn det-btn-primary" href="${m.url}" target="_blank">Open on Polymarket ↗</a>
+        <button class="det-btn det-btn-secondary" onclick="cp(this,'${ej(m.title)}')">Copy title</button>
+      </div>
+    </div>
+    <div class="resolution-note">${rn}</div>
+  </div>`;
+}
+
+function toggle(id){
+  const p=document.getElementById('d-'+id);if(!p)return;
+  const was=p.classList.contains('open');
+  document.querySelectorAll('.detail-panel.open').forEach(x=>x.classList.remove('open'));
+  if(!was)p.classList.add('open');
+}
+
+function cp(btn,t){
+  navigator.clipboard.writeText(t).then(()=>{btn.textContent='Copied!';setTimeout(()=>btn.textContent='Copy title',1500)});
+}
+
+boot();
+setInterval(boot,3*60*1000);
+</script>
+</body>
+</html>
